@@ -1,0 +1,49 @@
+---
+- name: Enable nginx service
+  hosts: webserver
+  remote_user: ubuntu
+  gather_facts: no
+  become: true
+  
+  tasks:
+  
+    - name: Install nginx
+      apt:
+        name: nginx-extras
+        update_cache: yes
+        
+    - name: Start nginx service
+      systemd:
+        name: nginx
+        state: started
+        
+    - name: Copy nginx config
+      copy:
+        src: nginx.conf
+        dest: /etc/nginx/sites-enabled/nginx.conf
+        mode: '0644'
+      
+    - name: Copy index.html
+      copy:
+        src: index.html
+        dest: /var/www/html/index.html
+        mode: '0644'
+        
+    - name: Check NGINX configs
+      shell: "/usr/sbin/nginx -t"
+      register: nginx_config_status
+      notify: Service NGINX restart
+    - name: NGINX test status
+      debug:
+        msg: "{{ nginx_config_status }}"
+    
+  handlers:
+
+    - name: Service NGINX restart
+      systemd:
+          name: nginx
+          state: restarted
+          daemon_reload: true
+      when: nginx_config_status.rc == 0
+      register: restart_nginx_result
+      ignore_errors: true
