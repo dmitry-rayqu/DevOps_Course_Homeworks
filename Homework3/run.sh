@@ -1,3 +1,4 @@
 #!/usr/bin/env bash
-ansible-playbook ./deploy_nginx.yml -i ./inventory.yml --diff
-curl http://100.100.0.72
+
+ansible-playbook playbook_nginx.yml -i inventory.yml --diff
+curl http://18.130.123.200

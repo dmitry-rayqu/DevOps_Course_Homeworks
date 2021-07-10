@@ -1,8 +1,9 @@
 ---
 - name: Enable nginx service
   hosts: webserver
-  become_user: root
+  remote_user: ubuntu
   gather_facts: no
+  become: true
   
   tasks:
   
@@ -21,7 +22,6 @@
         src: nginx.conf
         dest: /etc/nginx/sites-enabled/nginx.conf
         mode: '0644'
-      register: restart_nginx 
       
     - name: Copy index.html
       copy:
