@@ -1,0 +1,25 @@
+---
+- name: Install default packages for Debian systems
+  apt:
+    name:
+     - iotop
+     - htop
+     - mc
+     - net-tools
+     - postgresql
+     - libpq-dev
+    update_cache: yes
+    autoremove: yes
+  when: ansible_os_family == 'Debian'
+
+- name: Install default packages for Redhat systems
+  yum:
+    name:
+     - iotop
+     - htop
+     - mc
+     - net-tools
+     - postgresql
+     - libpq-dev
+    update_cache: yes
+  when: ansible_os_family == 'Redhat'

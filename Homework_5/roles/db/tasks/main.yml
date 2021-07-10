@@ -1,0 +1,71 @@
+---
+- name: Add PostgreSQL repository key
+  apt_key:
+    url: https://www.postgresql.org/media/keys/ACCC4CF8.asc
+
+- name: Add PostgreSQL repository
+  apt_repository:
+    repo: deb http://apt.postgresql.org/pub/repos/apt {{ ansible_distribution_release }}-pgdg main
+
+- name: Install PostgreSQL
+  apt:
+    name:
+      - "postgresql-{{ postgres_version }}"
+      - "postgresql-client-{{ postgres_version }}"
+      - "libpq-dev"
+      - "python3-psycopg2"
+    update_cache: yes
+
+- name: Create PostgreSQL data directory
+  file:
+    path: "{{ postgres_datadir }}"
+    state: directory
+    mode: '0750'
+    owner: postgres
+    group: postgres
+
+- name: Create conf.d
+  file:
+    path: "/etc/postgresql/{{ postgres_version }}/conf.d"
+    state: directory
+    owner: postgres
+    group: postgres
+
+- name: Create main directory
+  file:
+    path: "/etc/postgresql/{{ postgres_version }}/main"
+    state: directory
+    owner: postgres
+    group: postgres
+
+- name: Copy PostgreSQL configuration file
+  template:
+    src: postgresql.conf.j2
+    dest: "/etc/postgresql/{{ postgres_version }}/main/postgresql.conf"
+    owner: postgres
+    mode: 0644
+    force: yes
+  notify: Restart Postgres
+  
+- name: Flush handlers
+  meta: flush_handlers
+
+- name: Init PostgreSQL data directory
+  shell: "sudo -u postgres /usr/lib/postgresql/{{ postgres_version }}/bin/initdb -D {{ postgres_datadir }}"
+  register: postgres_datadir_init
+  ignore_errors: yes
+
+- name: Start PostgreSQL in data directory
+  shell: "sudo -u postgres /usr/lib/postgresql/{{ postgres_version }}/bin/pg_ctl start -D {{ postgres_datadir }}"
+  register: postgres_datadir_start
+  ignore_errors: yes
+
+- name: Start PostgreSQL service 
+  systemd:
+    name:  postgresql
+    state: started
+
+- name: Connect to test database and remove an existing user's password
+  postgresql_user:
+    user: "{{postgres_user}}"
+    password: "{{postgres_pass}}"

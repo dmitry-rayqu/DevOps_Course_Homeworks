@@ -1,0 +1,7 @@
+---
+- name: Set ip db instance
+  hosts: db_instance
+  remote_user: ubuntu
+  become: true
+  roles:
+    - db
